@@ -1,0 +1,74 @@
+<h1>Transfer</h1>
+<div style="max-width: 600px">
+  <div class="submit-form">
+    <div *ngIf="!submitted">
+      <div class="form-group" *ngIf="bankAccount !== null">
+        <label for="customerId">From</label>
+        <div>
+          <strong>{{ bankAccount?.displayName }}</strong> ({{ bankAccount?.id }})<br/>
+          <strong>Available Balance: </strong> {{ bankAccount?.postedBalance | currency }}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="customerId">To</label>
+        <select class="form-control"
+                id="destinationBankAccountId"
+                name="destinationBankAccountId"
+                required
+                [(ngModel)]="destinationBankAccountId">
+          <option *ngFor="let b of bankAccounts" [ngValue]="b.id">{{ b.displayName }}</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="displayName">Amount <em>(Max: {{ bankAccount?.postedBalance }})</em></label>
+        <div class="input-group">
+          <div class="input-group-prepend">
+            <div class="input-group-text">$</div>
+          </div>
+          <input type="text"
+                  class="form-control"
+                  id="transferAmount"
+                  required
+                  [(ngModel)]="transferAmount"
+                  name="transferAmount" />
+        </div>
+      </div>
+
+      <button (click)="performTransfer()" class="btn btn-success">Transfer</button>
+    </div>
+
+    <div *ngIf="submitted">
+
+      <br/>
+      <h3>Transfer Complete</h3>
+      <br/>
+
+      <table>
+        <tbody>
+          <tr>
+            <td style="min-width: 150px">ID:</td>
+            <td><strong>{{ transferSummary?.id }}</strong></td>
+          </tr>
+          <tr>
+            <td>Amount:</td>
+            <td>{{ transferAmount | currency }}</td>
+          </tr>
+          <tr>
+            <td>Current Balance:</td>
+            <td>{{ transferSummary?.postedBalance | currency }}</td>
+          </tr>
+          <tr>
+            <td>Created At:</td>
+            <td>{{ transferSummary?.createdAt | date }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <br/>
+
+      <button class="btn btn-success" (click)="clearTransfer()">Create Another</button>
+    </div>
+  </div>
+</div>

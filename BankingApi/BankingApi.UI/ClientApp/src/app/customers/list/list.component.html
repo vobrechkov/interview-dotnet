@@ -1,0 +1,30 @@
+<h1 id="tableLabel">Customers</h1>
+
+<div>
+  <a class="btn btn-primary" [routerLink]="['/customers/create']">Add New</a>
+</div>
+
+<br />
+
+<p *ngIf="!customers"><em>Loading...</em></p>
+
+<table class='table table-striped' aria-labelledby="tableLabel" *ngIf="customers">
+  <thead>
+    <tr>
+      <th>Name <em style="font-weight: lighter">(Last, First)</em></th>
+      <th>Phone</th>
+      <th>Email</th>
+      <th>Created</th>
+      <th>&nbsp;</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let customer of customers">
+      <td><strong>{{ customer.lastName }}, {{ customer.firstName }}</strong></td>
+      <td>{{ customer.phone }}</td>
+      <td><a href="mailto:{{customer.email}}">{{ customer.email }}</a></td>
+      <td>{{ customer.createdAt | date }}</td>
+      <td><a href="javascript: void();" class="btn btn-secondary">Add Account</a></td>
+    </tr>
+  </tbody>
+</table>

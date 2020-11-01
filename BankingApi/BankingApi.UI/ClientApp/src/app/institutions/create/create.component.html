@@ -1,0 +1,76 @@
+<h1>Create Institution</h1>
+<div style="max-width: 600px">
+  <div class="submit-form">
+    <div *ngIf="!submitted">
+      <div class="form-group">
+        <label for="name">Name</label>
+        <input type="text"
+               class="form-control"
+               id="name"
+               required
+               [(ngModel)]="institution.name"
+               name="name" />
+      </div>
+
+      <div class="form-group">
+        <label for="name">Phone</label>
+        <input type="text"
+               class="form-control"
+               id="phone"
+               required
+               [(ngModel)]="institution.phone"
+               name="phone" />
+      </div>
+
+      <div class="form-group">
+        <label for="name">Email</label>
+        <input type="text"
+               class="form-control"
+               id="email"
+               required
+               [(ngModel)]="institution.email"
+               name="email" />
+      </div>
+
+      <div class="form-group">
+        <label for="name">Website</label>
+        <input type="text"
+               class="form-control"
+               id="website"
+               required
+               [(ngModel)]="institution.website"
+               name="website" />
+      </div>
+
+      <button (click)="createInstitution()" class="btn btn-success">Create</button>
+    </div>
+
+    <div *ngIf="submitted">
+
+      <br/>
+      <h3>You successfully created a new institution!</h3>
+      <br/>
+
+      <table>
+        <tbody>
+          <tr>
+            <td>Name:</td>
+            <td><strong>{{ institution.name }}</strong></td>
+          </tr>
+          <tr>
+            <td style="min-width: 120px">ID:</td>
+            <td>{{ institution.id }}</td>
+          </tr>
+          <tr>
+            <td>Created At:</td>
+            <td>{{ institution.createdAt | date }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <br/>
+
+      <button class="btn btn-success" (click)="clearInstitution()">Create Another</button>
+    </div>
+  </div>
+</div>

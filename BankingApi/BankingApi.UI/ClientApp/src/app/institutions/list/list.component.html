@@ -1,0 +1,28 @@
+<h1 id="tableLabel">Institutions</h1>
+
+<div>
+  <a class="btn btn-primary" [routerLink]="['/institutions/create']">Add New</a>
+</div>
+
+<br />
+
+<p *ngIf="!institutions"><em>Loading...</em></p>
+
+<table class='table table-striped' aria-labelledby="tableLabel" *ngIf="institutions">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Email</th>
+      <th>Website</th>
+      <th>Created</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let institution of institutions">
+      <td><strong>{{ institution.name }}</strong></td>
+      <td><a href="mailto:{{institution.email}}">{{ institution.email }}</a></td>
+      <td><a href="{{ institution.website }}" target="_blank">{{ institution.website }}</a></td>
+      <td>{{ institution.createdAt | date }}</td>
+    </tr>
+  </tbody>
+</table>

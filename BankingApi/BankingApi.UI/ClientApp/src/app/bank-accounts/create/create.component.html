@@ -1,0 +1,83 @@
+<h1>Create Bank Account</h1>
+<div style="max-width: 600px">
+  <div class="submit-form">
+    <div *ngIf="!submitted">
+      <div>
+        <label>Account Type</label>
+      </div>
+      <div class="form-group">
+        <div class="form-check-inline">
+          <input type="radio" class="form-check-input" value="1" id="type-checking" name="type" [ngModel]="bankAccount.type" />
+          <label class="form-check-label" for="type-checking">Checking</label>
+        </div>
+        <div class="form-check-inline">
+          <input type="radio" class="form-check-input" value="2" id="type-savings" name="type" [ngModel]="bankAccount.type" />
+          <label class="form-check-label" for="type-savings">Savings</label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="customerId">Customer</label>
+        <select class="form-control"
+                id="customerId"
+                name="customerId"
+                required
+                [(ngModel)]="bankAccount.customerId">
+          <option *ngFor="let c of customers" [ngValue]="c.id">{{ c.lastName }}, {{ c.firstName }}</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="displayName">Display Name</label>
+        <input type="text"
+               class="form-control"
+               id="displayName"
+               required
+               [(ngModel)]="bankAccount.displayName"
+               name="displayName" />
+      </div>
+
+
+
+      <div class="form-group">
+        <label for="postedBalance">Opening Balance</label>
+        <input type="text"
+               class="form-control"
+               id="postedBalance"
+               required
+               [(ngModel)]="bankAccount.postedBalance"
+               name="postedBalance" />
+      </div>
+
+      <button (click)="createCustomer()" class="btn btn-success">Create</button>
+    </div>
+
+    <div *ngIf="submitted">
+
+      <br/>
+      <h3>You successfully created a new customer!</h3>
+      <br/>
+
+      <table>
+        <tbody>
+          <tr>
+            <td>Display Name:</td>
+            <td><strong>{{ bankAccount.displayName }}</strong></td>
+          </tr>
+          <tr>
+            <td style="min-width: 120px">ID:</td>
+            <td>{{ bankAccount.id }}</td>
+          </tr>
+          <tr>
+            <td>Created At:</td>
+            <td>{{ bankAccount.createdAt | date }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <br/>
+
+      <button class="btn btn-success" (click)="clearBankAccount()">Create Another</button>
+    </div>
+  </div>
+</div>

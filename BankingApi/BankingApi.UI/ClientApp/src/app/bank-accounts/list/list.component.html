@@ -1,0 +1,32 @@
+<h1 id="tableLabel">Bank Accounts</h1>
+
+<div>
+  <a class="btn btn-primary" [routerLink]="['/bankaccounts/create']">Add New</a>
+</div>
+
+<br />
+
+<p *ngIf="!bankAccounts"><em>Loading...</em></p>
+
+<table class='table table-striped' aria-labelledby="tableLabel" *ngIf="bankAccounts">
+  <thead>
+    <tr>
+      <th>Display Name</th>
+      <th>Type</th>
+      <th>Customer</th>
+      <th>Institution</th>
+      <th>Created</th>
+      <th>&nbsp;</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let bankAccount of bankAccounts">
+      <td><strong>{{ bankAccount.displayName }}</strong></td>
+      <td>{{ bankAccount.description }}</td>
+      <td>{{ bankAccount.customerName }}</td>
+      <td>{{ bankAccount.institutionName }}</td>
+      <td>{{ bankAccount.createdAt | date }}</td>
+      <td><a class="btn btn-secondary" [routerLink]="['/bankaccounts/transfer-from', bankAccount.id]">Make Transfer</a></td>
+    </tr>
+  </tbody>
+</table>
