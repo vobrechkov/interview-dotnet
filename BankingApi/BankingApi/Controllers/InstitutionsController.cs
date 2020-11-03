@@ -10,22 +10,22 @@ namespace BankingApi.Controllers
     [ApiController]
     public class InstitutionsController : ControllerBase
     {
-        private readonly InstitutionService _service;
+        private readonly IInstitutionService _institutionService;
 
-        public InstitutionsController(InstitutionService service)
+        public InstitutionsController(IInstitutionService service)
         {
-            _service = service;
+            _institutionService = service;
         }
 
         // GET: api/institutions
         [HttpGet]
-        public IActionResult Get() => Ok(_service.GetAll());
+        public IActionResult Get() => Ok(_institutionService.GetAll());
 
         // GET api/institutions/5
         [HttpGet("{id:guid}")]
         public async Task<IActionResult> Get(Guid id)
         {
-            var institution = await _service.GetByIdAsync(id);
+            var institution = await _institutionService.GetByIdAsync(id);
 
             if (institution is null)
             {
@@ -44,7 +44,7 @@ namespace BankingApi.Controllers
                 return BadRequest(ModelState);
             }
 
-            var result = await _service.CreateAsync(institution);
+            var result = await _institutionService.CreateAsync(institution);
 
             if (result is null)
             {
@@ -63,7 +63,7 @@ namespace BankingApi.Controllers
                 return BadRequest();
             }
 
-            if (await _service.UpdateAsync(institution) != 1)
+            if (await _institutionService.UpdateAsync(institution) != 1)
             {
                 return BadRequest();
             }
@@ -75,7 +75,7 @@ namespace BankingApi.Controllers
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            if (!await _service.DeleteAsync(id))
+            if (!await _institutionService.DeleteAsync(id))
             { 
                 return BadRequest();
             }

@@ -5,19 +5,19 @@
       <div class="form-group" *ngIf="bankAccount !== null">
         <label for="customerId">From</label>
         <div>
-          <strong>{{ bankAccount?.displayName }}</strong> ({{ bankAccount?.id }})<br/>
+          <strong>{{ bankAccount?.displayName }}</strong> ({{ bankAccount?.number }})<br/>
           <strong>Available Balance: </strong> {{ bankAccount?.postedBalance | currency }}
         </div>
       </div>
 
       <div class="form-group">
-        <label for="customerId">To</label>
+        <label for="destinationAccountNumber">To</label>
         <select class="form-control"
-                id="destinationBankAccountId"
-                name="destinationBankAccountId"
+                id="destinationAccountNumber"
+                name="destinationAccountNumber"
                 required
-                [(ngModel)]="destinationBankAccountId">
-          <option *ngFor="let b of bankAccounts" [ngValue]="b.id">{{ b.displayName }}</option>
+                [(ngModel)]="destinationAccountNumber">
+          <option *ngFor="let b of bankAccounts" [ngValue]="b.number">{{ b.displayName }}</option>
         </select>
       </div>
 
@@ -52,23 +52,42 @@
             <td><strong>{{ transferSummary?.id }}</strong></td>
           </tr>
           <tr>
+            <td>Created At:</td>
+            <td>{{ transferSummary?.createdAt | date }}</td>
+          </tr>
+          <tr>
             <td>Amount:</td>
             <td>{{ transferAmount | currency }}</td>
           </tr>
           <tr>
-            <td>Current Balance:</td>
-            <td>{{ transferSummary?.postedBalance | currency }}</td>
+            <td colspan="2"><strong>From:</strong></td>
           </tr>
           <tr>
-            <td>Created At:</td>
-            <td>{{ transferSummary?.createdAt | date }}</td>
+            <td>Account Number:</td>
+            <td>{{ transferSummary?.sourceAccountNumber }}</td>
           </tr>
+          <tr>
+            <td>Balance:</td>
+            <td>{{ transferSummary?.sourceAccountBalance | currency }}</td>
+          </tr>
+          <tr>
+            <td colspan="2"><strong>To:</strong></td>
+          </tr>
+          <tr>
+            <td>Account Number:</td>
+            <td>{{ transferSummary?.destinationAccountNumber }}</td>
+          </tr>
+          <tr>
+            <td>Balance:</td>
+            <td>{{ transferSummary?.destinationAccountBalance | currency }}</td>
+          </tr>
+
         </tbody>
       </table>
 
       <br/>
 
-      <button class="btn btn-success" (click)="clearTransfer()">Create Another</button>
+      <a class="btn btn-primary" [routerLink]="['/bankaccounts']">Return to Accounts</a>
     </div>
   </div>
 </div>

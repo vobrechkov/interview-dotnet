@@ -7,7 +7,7 @@ import { BankAccountTransferComponent } from './transfer/transfer.component';
 const routes: Routes = [
   { path: 'bankaccounts', component: ListBankAccountsComponent },
   { path: 'bankaccounts/create', component: CreateBankAccountComponent },
-  { path: 'bankaccounts/transfer-from/:id', component: BankAccountTransferComponent }
+  { path: 'bankaccounts/transfer-from/:number', component: BankAccountTransferComponent }
 ];
 
 @NgModule({

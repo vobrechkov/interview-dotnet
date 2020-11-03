@@ -4,7 +4,6 @@ using BankingApi.Models.Entities;
 using BankingApi.Models.Enumerations;
 using BankingApi.Models.ViewModels;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace BankingApi.Data.Services
 {
-    public class BankAccountService
+    public class BankAccountService : IBankAccountService
     {
         private readonly BankingContext _ctx;
         private readonly IMapper _mapper;
@@ -36,22 +35,14 @@ namespace BankingApi.Data.Services
         /// <returns></returns>
         public IEnumerable<BankAccountViewModel> GetAllByCustomerId(Guid customerId) => GetBankAccounts(customerId);
 
-        private IEnumerable<BankAccountViewModel> GetBankAccounts(Guid? customerId = null)
+        /// <summary>
+        /// Gets a bank account by account number
+        /// </summary>
+        /// <param name="number"></param>
+        /// <returns></returns>
+        public async Task<BankAccountDto> GetByIdAsync(string number)
         {
-            IQueryable<BankAccount> query = _ctx.BankAccounts.Include(i => i.Customer).Include(i => i.Customer.Institution);
-
-            if (customerId.HasValue)
-            {
-                query = query.Where(x => x.CustomerId == (Guid)customerId);
-            }
-
-            return _mapper.ProjectTo<BankAccountViewModel>(
-                query.OrderBy(o => o.DisplayName));
-        }
-
-        public async Task<BankAccountDto> GetByIdAsync(Guid id)
-        {
-            var bankAccountEntity = await _ctx.BankAccounts.FindAsync(id);
+            var bankAccountEntity = await _ctx.BankAccounts.FindAsync(number);
 
             if (bankAccountEntity is null)
             {
@@ -61,32 +52,61 @@ namespace BankingApi.Data.Services
             return _mapper.Map<BankAccountDto>(bankAccountEntity);
         }
 
+        /// <summary>
+        /// Checks if a customer has an account with a given displayName
+        /// </summary>
+        /// <param name="customerId"></param>
+        /// <param name="displayName"></param>
+        /// <returns></returns>
         public async Task<bool> ExistsAsync(Guid customerId, string displayName)
             => await _ctx.BankAccounts.AnyAsync(ba => ba.CustomerId == customerId &&
                 ba.DisplayName.ToLower() == displayName.ToLower());
 
+        /// <summary>
+        /// Creates a bank account
+        /// </summary>
+        /// <param name="bankAccount"></param>
+        /// <returns></returns>
         public async Task<BankAccountDto> CreateAsync(NewBankAccountDto bankAccount)
         {
             var bankAccountEntity = _mapper.Map<BankAccount>(bankAccount);
 
-            bankAccountEntity.Id = Guid.NewGuid();
+            await using var dbTransaction = await _ctx.Database.BeginTransactionAsync();
+
+            var bankAccountNumber = await _ctx.BankAccountNumbers.FirstOrDefaultAsync();
+
+            if (bankAccountNumber == null)
+            {
+                _ctx.BankAccountNumbers.Add(new BankAccountNumber() { LastNumber = 1 });
+            }
+
+            bankAccountNumber.LastNumber++;
+            bankAccountNumber.GeneratedAt = DateTime.UtcNow;
+
+            bankAccountEntity.Number = $"{bankAccountNumber.LastNumber:0000000000}";
             bankAccountEntity.CreatedAt = DateTime.UtcNow;
 
             _ctx.BankAccounts.Add(bankAccountEntity);
 
-            if (await _ctx.SaveChangesAsync() == 1)
+            if (await _ctx.SaveChangesAsync() > 0)
             {
+                await dbTransaction.CommitAsync();
                 return _mapper.Map<BankAccountDto>(bankAccountEntity);
             }
 
             return null;
         }
 
+        /// <summary>
+        /// Updates a bank account
+        /// </summary>
+        /// <param name="bankAccount"></param>
+        /// <returns></returns>
         public async Task<int> UpdateAsync(BankAccountDto bankAccount)
         {
-            var bankAccountEntity = await _ctx.BankAccounts.FindAsync(bankAccount.Id);
+            var bankAccountEntity = await _ctx.BankAccounts.FindAsync(bankAccount.Number);
 
-            if (bankAccountEntity is null)
+            if (bankAccountEntity == null)
             {
                 return 0;
             }
@@ -97,9 +117,14 @@ namespace BankingApi.Data.Services
             return await _ctx.SaveChangesAsync();
         }
 
-        public async Task<bool> DeleteAsync(Guid id)
+        /// <summary>
+        /// Deletes a bank account
+        /// </summary>
+        /// <param name="number"></param>
+        /// <returns></returns>
+        public async Task<bool> DeleteAsync(string number)
         {
-            var bankAccountEntity = await _ctx.BankAccounts.FindAsync(id);
+            var bankAccountEntity = await _ctx.BankAccounts.FindAsync(number);
 
             if (bankAccountEntity is null)
             {
@@ -111,12 +136,19 @@ namespace BankingApi.Data.Services
             return await _ctx.SaveChangesAsync() == 1;
         }
 
-        public async Task<ResultDto<TransactionSummaryDto>> CreateTransactionAsync(Guid bankAccountId, TransactionType transactionType, decimal amount)
+        /// <summary>
+        /// Creates a bank account transaction (depoist/withdrawal)
+        /// </summary>
+        /// <param name="bankAccountNumber"></param>
+        /// <param name="transactionType"></param>
+        /// <param name="amount"></param>
+        /// <returns></returns>
+        public async Task<ResultDto<TransactionSummaryDto>> CreateTransactionAsync(string bankAccountNumber, TransactionType transactionType, decimal amount)
         {
-            var bankAccount = await _ctx.BankAccounts.FindAsync(bankAccountId);
+            var bankAccount = await _ctx.BankAccounts.FindAsync(bankAccountNumber);
             var result = new ResultDto<TransactionSummaryDto>();
 
-            if (bankAccount is null)
+            if (bankAccount == null)
             {
                 result.Errors.Add("Invalid bank account");
             }
@@ -142,7 +174,7 @@ namespace BankingApi.Data.Services
             var transaction = new Transaction
             {
                 Id = Guid.NewGuid(),
-                BankAccountId = bankAccountId,
+                BankAccountNumber = bankAccountNumber,
                 Type = transactionType,
                 Amount = amount,
                 CreatedAt = DateTime.UtcNow
@@ -170,20 +202,27 @@ namespace BankingApi.Data.Services
             return result;
         }
 
-        public async Task<ResultDto<TransferSummaryDto>> TranserAsync(Guid sourceAccountId, Guid destinationAccountId, decimal amount)
-        {            
+        /// <summary>
+        /// Creates a transfer between two accounts
+        /// </summary>
+        /// <param name="sourceAccountNumber"></param>
+        /// <param name="destinationAccountNumber"></param>
+        /// <param name="amount"></param>
+        /// <returns></returns>
+        public async Task<ResultDto<TransferSummaryDto>> TranserAsync(string sourceAccountNumber, string destinationAccountNumber, decimal amount)
+        {
             BankAccount sourceAccount;
             BankAccount destinatonAccount;
 
             var result = new ResultDto<TransferSummaryDto>();
-            var bankAccounts = _ctx.BankAccounts.Where(ba => ba.Id == sourceAccountId || ba.Id == destinationAccountId).ToList();            
+            var bankAccounts = _ctx.BankAccounts.Where(ba => ba.Number == sourceAccountNumber || ba.Number == destinationAccountNumber).ToList();
 
-            if ((sourceAccount = bankAccounts.FirstOrDefault(ba => ba.Id == sourceAccountId)) == null)
+            if ((sourceAccount = bankAccounts.FirstOrDefault(ba => ba.Number == sourceAccountNumber)) == null)
             {
                 result.Errors.Add("Invalid source account");
             }
 
-            if ((destinatonAccount = bankAccounts.FirstOrDefault(ba => ba.Id == destinationAccountId)) == null)
+            if ((destinatonAccount = bankAccounts.FirstOrDefault(ba => ba.Number == destinationAccountNumber)) == null)
             {
                 result.Errors.Add("Invalid destination account");
             }
@@ -200,16 +239,16 @@ namespace BankingApi.Data.Services
 
             await using var dbTransaction = await _ctx.Database.BeginTransactionAsync();
 
-            var withdrawalResult = await CreateTransactionAsync(sourceAccountId, TransactionType.Withdrawal, amount);
+            var withdrawalResult = await CreateTransactionAsync(sourceAccountNumber, TransactionType.Withdrawal, amount);
 
             if (withdrawalResult?.Errors?.Any() == true)
             {
                 await dbTransaction.RollbackAsync();
                 result.Errors.AddRange(withdrawalResult.Errors);
                 return result;
-            }    
+            }
 
-            var depositResult = await CreateTransactionAsync(destinationAccountId, TransactionType.Deposit, amount);
+            var depositResult = await CreateTransactionAsync(destinationAccountNumber, TransactionType.Deposit, amount);
 
             if (depositResult?.Errors?.Any() == true)
             {
@@ -234,8 +273,10 @@ namespace BankingApi.Data.Services
                 await dbTransaction.CommitAsync();
 
                 var transferSummary = _mapper.Map<TransferSummaryDto>(transfer);
-                transferSummary.SourceBankAccountId = sourceAccountId;
-                transferSummary.DestinationBankAccountId = destinationAccountId;
+                transferSummary.SourceAccountNumber = sourceAccountNumber;
+                transferSummary.SourceAccountBalance = sourceAccount.PostedBalance;
+                transferSummary.DestinationAccountNumber = destinationAccountNumber;
+                transferSummary.DestinationAccountBalance = destinatonAccount.PostedBalance;
 
                 result.Data = transferSummary;
             }
@@ -250,6 +291,24 @@ namespace BankingApi.Data.Services
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Gets bank accounts filtered by customer or returns all accounts if no customerId specified
+        /// </summary>
+        /// <param name="customerId"></param>
+        /// <returns></returns>
+        private IEnumerable<BankAccountViewModel> GetBankAccounts(Guid? customerId = null)
+        {
+            IQueryable<BankAccount> query = _ctx.BankAccounts.Include(i => i.Customer).Include(i => i.Customer.Institution);
+
+            if (customerId.HasValue)
+            {
+                query = query.Where(x => x.CustomerId == (Guid)customerId);
+            }
+
+            return _mapper.ProjectTo<BankAccountViewModel>(
+                query.OrderBy(o => o.DisplayName));
         }
     }
 }

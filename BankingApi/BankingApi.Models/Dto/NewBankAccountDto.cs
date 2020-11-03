@@ -12,5 +12,7 @@ namespace BankingApi.Models.Dto
         public AccountType Type { get; set; }
         [Required]
         public string DisplayName { get; set; }
+        [Required]
+        public string RoutingNumber { get; set; }
     }
 }

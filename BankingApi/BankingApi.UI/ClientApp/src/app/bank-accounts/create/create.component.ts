@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { BankAccountsService, BankAccount } from '../bank-accounts.service';
+import { BankAccountsService, AccountTypes, BankAccount, NewBankAccount } from '../bank-accounts.service';
 import { CustomersService, Customer } from '../../customers/customers.service';
 
 @Component({
@@ -8,47 +8,57 @@ import { CustomersService, Customer } from '../../customers/customers.service';
   styleUrls: ['./create.component.css']
 })
 export class CreateBankAccountComponent implements OnInit {
+  private accountTypes = AccountTypes;
   private bankAccount: BankAccount;
   private customers: Customer[];
+  private openingBalance: number;
   submitted = false;
 
-  constructor(private bankAccountsService: BankAccountsService, private customersService: CustomersService) {
+  constructor(private bankAccountsService: BankAccountsService,
+              private customersService: CustomersService) {
     this.clearBankAccount();
   }
 
-  ngOnInit() {
+  ngOnInit() {  
     this.customersService.getAll()
       .subscribe(response => {
         console.log(response);
         this.customers = response;
       },
-      error => {
-        console.log(error);
-      });
+      error => console.log(error));
   }
 
   createBankAccount(): void {
-    const newBankAccount = {
-      customerId: this.bankAccount.customerId,
-      displayName: this.bankAccount.displayName,
-      type: this.bankAccount.type
-    };
-    this.bankAccountsService.create(newBankAccount)
+    this.bankAccountsService.create(this.bankAccount as NewBankAccount)
       .subscribe(response => {
         console.log(response);
-        this.bankAccount.id = response.id;
+        this.bankAccount.number = response.number;
         this.bankAccount.createdAt = response.createdAt;
-        this.submitted = true;
+
+        this.bankAccountsService.deposit(response.number, this.openingBalance)
+          .subscribe(response => {
+
+            if (response.errors && response.errors.length) {
+              console.log('Error making deposit', response.errors);
+            }
+
+            this.submitted = true;
+          },
+          error => console.log(error));        
       },
-      error => {
-        console.log(error);
-      });
+      error => console.log(error));
+  }
+
+  accountTypeChange(e): void {
+    this.bankAccount.type = parseInt(e.target.value);
+    console.log(this.bankAccount);
   }
 
   clearBankAccount(): void {
     this.submitted = false;
     this.bankAccount = {
-      id: '',
+      number: '',
+      routingNumber: '',
       customerId: '',
       displayName: '',
       postedBalance: 0,

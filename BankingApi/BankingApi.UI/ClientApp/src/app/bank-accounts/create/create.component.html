@@ -2,18 +2,16 @@
 <div style="max-width: 600px">
   <div class="submit-form">
     <div *ngIf="!submitted">
-      <div>
-        <label>Account Type</label>
-      </div>
       <div class="form-group">
-        <div class="form-check-inline">
-          <input type="radio" class="form-check-input" value="1" id="type-checking" name="type" [ngModel]="bankAccount.type" />
-          <label class="form-check-label" for="type-checking">Checking</label>
-        </div>
-        <div class="form-check-inline">
-          <input type="radio" class="form-check-input" value="2" id="type-savings" name="type" [ngModel]="bankAccount.type" />
-          <label class="form-check-label" for="type-savings">Savings</label>
-        </div>
+        <label for="type">Account Type</label>
+        <select class="form-control"
+                id="type"
+                name="type"
+                required
+                (change)="accountTypeChange($event)">
+          <option value="1">Checking</option>
+          <option value="2">Savings</option>
+        </select>
       </div>
 
       <div class="form-group">
@@ -28,6 +26,16 @@
       </div>
 
       <div class="form-group">
+        <label for="routingNumber">Routing Number</label>
+        <input type="text"
+               class="form-control"
+               id="routingNumber"
+               required
+               [(ngModel)]="bankAccount.routingNumber"
+               name="routingNumber" />
+      </div>
+
+      <div class="form-group">
         <label for="displayName">Display Name</label>
         <input type="text"
                class="form-control"
@@ -37,19 +45,17 @@
                name="displayName" />
       </div>
 
-
-
       <div class="form-group">
-        <label for="postedBalance">Opening Balance</label>
+        <label for="openingBalance">Opening Balance</label>
         <input type="text"
                class="form-control"
-               id="postedBalance"
+               id="openingBalance"
                required
-               [(ngModel)]="bankAccount.postedBalance"
+               [(ngModel)]="openingBalance"
                name="postedBalance" />
       </div>
 
-      <button (click)="createCustomer()" class="btn btn-success">Create</button>
+      <button (click)="createBankAccount()" class="btn btn-primary">Create</button>
     </div>
 
     <div *ngIf="submitted">
@@ -61,12 +67,16 @@
       <table>
         <tbody>
           <tr>
-            <td>Display Name:</td>
-            <td><strong>{{ bankAccount.displayName }}</strong></td>
+            <td style="min-width: 120px">Account Number:</td>
+            <td>{{ bankAccount.number }}</td>
           </tr>
           <tr>
-            <td style="min-width: 120px">ID:</td>
-            <td>{{ bankAccount.id }}</td>
+            <td style="min-width: 120px">Routing Number:</td>
+            <td>{{ bankAccount.routingNumber }}</td>
+          </tr>
+          <tr>
+            <td>Display Name:</td>
+            <td><strong>{{ bankAccount.displayName }}</strong></td>
           </tr>
           <tr>
             <td>Created At:</td>

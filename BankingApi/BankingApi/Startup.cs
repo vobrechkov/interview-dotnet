@@ -26,7 +26,7 @@ namespace BankingApi
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<BankingContext>(options =>
-                options.UseSqlite("Data Source=BankingContext.db", b => b.MigrationsAssembly("BankingApi.Data")));
+                options.UseSqlServer(Configuration.GetConnectionString("BankingContext"), b => b.MigrationsAssembly("BankingApi.Data")));
 
             services.AddCors(o => o.AddPolicy(CorsPolicy, b =>
             {
@@ -39,9 +39,9 @@ namespace BankingApi
             services.AddControllers();
             services.AddAutoMapper(typeof(InstitutionMappingProfile).Assembly);
 
-            services.AddTransient<BankAccountService>();
-            services.AddTransient<CustomerService>();
-            services.AddTransient<InstitutionService>();
+            services.AddTransient<IBankAccountService, BankAccountService>();
+            services.AddTransient<ICustomerService, CustomerService>();
+            services.AddTransient<IInstitutionService, InstitutionService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

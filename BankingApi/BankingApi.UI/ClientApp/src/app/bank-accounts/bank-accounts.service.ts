@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION } from 'constants';
 
 const baseUrl = environment.baseApiUrl + 'bankaccounts';
 
@@ -26,27 +25,36 @@ export class BankAccountsService {
     return this.httpClient.get(resourceUrl);
   }
 
-  get(bankAccountId): Observable<BankAccount> {
-    return this.httpClient.get<BankAccount>(`${baseUrl}/${bankAccountId}`);
+  get(accountNumber): Observable<BankAccount> {
+    return this.httpClient.get<BankAccount>(`${baseUrl}/${accountNumber}`);
   }
 
-  create(newBankAccount): Observable<BankAccount> {
-    console.log('[BankAccountsService] creating new customer: ', newBankAccount);
+  create(newBankAccount: NewBankAccount): Observable<BankAccount> {
+    console.log('[BankAccountsService] creating new bank account: ', newBankAccount);
     return this.httpClient.post<BankAccount>(baseUrl, newBankAccount);
   }
 
-  update(id, bankAccount): Observable<any> {
-    return this.httpClient.put<BankAccount>(`${baseUrl}/${id}`, bankAccount);
+  update(accountNumber, bankAccount): Observable<any> {
+    return this.httpClient.put<BankAccount>(`${baseUrl}/${accountNumber}`, bankAccount);
   }
 
-  delete(id): Observable<any> {
-    return this.httpClient.delete(`${baseUrl}/${id}`);
+  delete(accountNumber): Observable<any> {
+    return this.httpClient.delete(`${baseUrl}/${accountNumber}`);
   }
 
-  transfer(sourceAccountId: string, destinationAccountId: string, amount: number): Observable<any> {
-    return this.httpClient.post(`${baseUrl}/${sourceAccountId}/transfer/${destinationAccountId}/amount/${amount}`, null);
+  deposit(accountNumber: string, amount: number): Observable<any> {
+    return this.httpClient.post(`${baseUrl}/${accountNumber}/deposit/${amount}`, null);
+  }
+
+  transfer(sourceAccountNumber: string, destinationAccountNumber: string, amount: number): Observable<any> {
+    return this.httpClient.post(`${baseUrl}/${sourceAccountNumber}/transfer/${destinationAccountNumber}/amount/${amount}`, null);
   }
 }
+
+export enum AccountTypes {
+  Checking = 1,
+  Savings = 2
+};
 
 export interface BankAccountDetails extends BankAccount {
   description: '';
@@ -55,12 +63,13 @@ export interface BankAccountDetails extends BankAccount {
 }
 
 export interface BankAccount extends NewBankAccount {
-  id: string;
+  number: string;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface NewBankAccount {
+  routingNumber: string;
   customerId: string;
   displayName: string;
   type: number;
@@ -68,6 +77,6 @@ export interface NewBankAccount {
 }
 
 export interface BankAccountListItem {
-  id: string;
+  number: string;
   displayName: string;
 }

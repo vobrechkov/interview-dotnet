@@ -1,5 +1,6 @@
 ﻿using BankingApi.Data.Services;
 using BankingApi.Models.Dto;
+using BankingApi.Models.Enumerations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using System;
@@ -12,9 +13,9 @@ namespace BankingApi.Controllers
     [ApiController]
     public class BankAccountsController : BaseController
     {
-        private readonly BankAccountService _bankAccountService;        
+        private readonly IBankAccountService _bankAccountService;        
 
-        public BankAccountsController(BankAccountService bankAccountService, IOptions<ApiBehaviorOptions> behaviorOptions)
+        public BankAccountsController(IBankAccountService bankAccountService, IOptions<ApiBehaviorOptions> behaviorOptions)
             : base(behaviorOptions)
         {
             _bankAccountService = bankAccountService;
@@ -32,14 +33,14 @@ namespace BankingApi.Controllers
                 _bankAccountService.GetAllByCustomerId((Guid)customerId) :
                 _bankAccountService.GetAll();
 
-            return Ok(bankAccounts.Select(s => new { s.Id, s.DisplayName }));
+            return Ok(bankAccounts.Select(s => new { s.Number, s.DisplayName }));
         }
 
-        // GET api/bankaccounts/{guid}
-        [HttpGet("{id:guid}")]
-        public async Task<IActionResult> GetByIdAsync(Guid id)
+        // GET api/bankaccounts/0000000000
+        [HttpGet("{number}")]
+        public async Task<IActionResult> GetByIdAsync(string number)
         {
-            var bankAccount = await _bankAccountService.GetByIdAsync(id);
+            var bankAccount = await _bankAccountService.GetByIdAsync(number);
 
             if (bankAccount is null)
             {
@@ -61,7 +62,7 @@ namespace BankingApi.Controllers
             if (!ModelState.IsValid)
             {
                 return ModelStateValidationBadRequest();
-            }            
+            }
 
             var result = await _bankAccountService.CreateAsync(newBankAccount);
 
@@ -70,17 +71,22 @@ namespace BankingApi.Controllers
                 return BadRequest(result);
             }
 
-            return CreatedAtAction("Get", new { id = result.Id }, result);
+            return CreatedAtAction("Get", new { id = result.Number }, result);
         }
 
         // PUT api/bankaccounts/{guid}
-        [HttpPut("{id:guid}")]
-        public async Task<IActionResult> UpdateAsync(Guid id, [FromBody] BankAccountDto bankAccount)
+        [HttpPut("{number}")]
+        public async Task<IActionResult> UpdateAsync(string number, [FromBody] BankAccountDto bankAccount)
         {
-            if (!ModelState.IsValid || id != bankAccount.Id)
+            if (number != bankAccount.Number)
             {
                 return BadRequest();
             }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }           
 
             if (await _bankAccountService.UpdateAsync(bankAccount) != 1)
             {
@@ -90,11 +96,11 @@ namespace BankingApi.Controllers
             return Ok();
         }
 
-        // DELETE api/bankaccounts/{guid}
-        [HttpDelete("{id:guid}")]
-        public async Task<IActionResult> DeleteAsync(Guid id)
+        // DELETE api/bankaccounts/0000000000
+        [HttpDelete("{number}")]
+        public async Task<IActionResult> DeleteAsync(string number)
         {
-            if (!await _bankAccountService.DeleteAsync(id))
+            if (!await _bankAccountService.DeleteAsync(number))
             {
                 return BadRequest();
             }
@@ -102,14 +108,15 @@ namespace BankingApi.Controllers
             return NoContent();
         }
 
-        [HttpPost("{bankAccountId:guid}/deposit/{amount:decimal}")]
-        public async Task<IActionResult> AddDepositAsync(Guid bankAccountId, decimal amount)
+        // POST api/bankaccounts/0000000000/deposit/50.00
+        [HttpPost("{bankAccountNumber}/deposit/{amount:decimal}")]
+        public async Task<IActionResult> AddDepositAsync(string bankAccountNumber, decimal amount)
         {
-            var bankAccount = await _bankAccountService.GetByIdAsync(bankAccountId);
+            var bankAccount = await _bankAccountService.GetByIdAsync(bankAccountNumber);
 
             if (bankAccount == null)
             {
-                ModelState.AddModelError(nameof(bankAccountId), "Bank account not found");                
+                ModelState.AddModelError(nameof(bankAccountNumber), "Bank account not found");                
             }
 
             if (amount <= 0)
@@ -122,7 +129,7 @@ namespace BankingApi.Controllers
                 return ModelStateValidationBadRequest();
             }
 
-            var result = await _bankAccountService.CreateTransactionAsync(bankAccountId, Models.Enumerations.TransactionType.Deposit, amount);
+            var result = await _bankAccountService.CreateTransactionAsync(bankAccountNumber, TransactionType.Deposit, amount);
 
             if (result.Errors.Any())
             {
@@ -133,15 +140,15 @@ namespace BankingApi.Controllers
             return Ok(result);
         }
 
-        [HttpPost("{sourceAccountId:guid}/transfer/{targetAccountId:guid}/amount/{amount:decimal}")]
-        public async Task<IActionResult> Post(Guid sourceAccountId, Guid targetAccountId, decimal amount)
+        [HttpPost("{sourceAccountNumber}/transfer/{targetAccountNumber}/amount/{amount:decimal}")]
+        public async Task<IActionResult> Post(string sourceAccountNumber, string targetAccountNumber, decimal amount)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var result = await _bankAccountService.TranserAsync(sourceAccountId, targetAccountId, amount);
+            var result = await _bankAccountService.TranserAsync(sourceAccountNumber, targetAccountNumber, amount);
 
             if (result.Errors.Any())
             {

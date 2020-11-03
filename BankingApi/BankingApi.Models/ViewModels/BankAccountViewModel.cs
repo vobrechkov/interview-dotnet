@@ -4,7 +4,8 @@ namespace BankingApi.Models.ViewModels
 {
     public class BankAccountViewModel
     {
-        public Guid Id { get; set; }
+        public string Number { get; set; }
+        public string RoutingNumber { get; set; }
         public Guid CustomerId { get; set; }
         public string CustomerName { get; set; }
         public string InstitutionName { get; set; }

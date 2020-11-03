@@ -11,13 +11,12 @@ namespace BankingApi.Models.MappingProfiles
             CreateMap<Transfer, TransferDto>()
                 .ReverseMap()
                 .ForMember(d => d.SourceTransaction, o => o.Ignore())
-                .ForMember(d => d.DestinationTransaction, o => o.Ignore());
+                .ForAllOtherMembers(d => d.Ignore());
 
             CreateMap<Transfer, TransferSummaryDto>()
                 .ForMember(d => d.TransferId, o => o.MapFrom(s => s.Id))
                 .ForMember(d => d.TransferDate, o => o.MapFrom(s => s.CreatedAt))
-                .ForMember(d => d.SourceBankAccountId, o => o.Ignore())
-                .ForMember(d => d.DestinationBankAccountId, o => o.Ignore());
+                .ForAllOtherMembers(d => d.Ignore());
         }
     }
 }

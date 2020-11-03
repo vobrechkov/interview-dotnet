@@ -3,6 +3,7 @@ using System;
 using BankingApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BankingApi.Data.Migrations
@@ -14,65 +15,94 @@ namespace BankingApi.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "3.1.9");
+                .HasAnnotation("ProductVersion", "3.1.9")
+                .HasAnnotation("Relational:MaxIdentifierLength", 128)
+                .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
             modelBuilder.Entity("BankingApi.Models.Entities.BankAccount", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                    b.Property<string>("Number")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetime2");
 
                     b.Property<Guid>("CustomerId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("DisplayName")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("PostedBalance")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("RoutingNumber")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Type")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetime2");
 
-                    b.HasKey("Id");
+                    b.HasKey("Number");
 
                     b.HasIndex("CustomerId");
 
                     b.ToTable("BankAccounts");
                 });
 
+            modelBuilder.Entity("BankingApi.Models.Entities.BankAccountNumber", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("GeneratedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("LastNumber")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BankAccountNumbers");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("fe625a2b-20e3-48d1-9c71-036fd295147b"),
+                            GeneratedAt = new DateTime(2020, 11, 3, 0, 21, 4, 393, DateTimeKind.Utc).AddTicks(2168),
+                            LastNumber = 1
+                        });
+                });
+
             modelBuilder.Entity("BankingApi.Models.Entities.Customer", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Email")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("FirstName")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("InstitutionId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("LastName")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Phone")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
@@ -85,25 +115,25 @@ namespace BankingApi.Data.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Email")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Phone")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Website")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -114,23 +144,23 @@ namespace BankingApi.Data.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("Amount")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,2)");
 
-                    b.Property<Guid>("BankAccountId")
-                        .HasColumnType("TEXT");
+                    b.Property<string>("BankAccountNumber")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("Type")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BankAccountId");
+                    b.HasIndex("BankAccountNumber");
 
                     b.ToTable("Transactions");
                 });
@@ -139,32 +169,34 @@ namespace BankingApi.Data.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("Amount")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetime2");
 
-                    b.Property<Guid>("DestinationTransactionid")
-                        .HasColumnType("TEXT");
+                    b.Property<Guid>("DestinationTransactionId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("SourceTransactionId")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DestinationTransactionid");
+                    b.HasIndex("DestinationTransactionId")
+                        .IsUnique();
 
-                    b.HasIndex("SourceTransactionId");
+                    b.HasIndex("SourceTransactionId")
+                        .IsUnique();
 
                     b.ToTable("Transfers");
                 });
 
             modelBuilder.Entity("BankingApi.Models.Entities.BankAccount", b =>
                 {
-                    b.HasOne("BankingApi.Models.Entities.Customer", null)
+                    b.HasOne("BankingApi.Models.Entities.Customer", "Customer")
                         .WithMany("BankAccounts")
                         .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -184,23 +216,21 @@ namespace BankingApi.Data.Migrations
                 {
                     b.HasOne("BankingApi.Models.Entities.BankAccount", "BankAccount")
                         .WithMany()
-                        .HasForeignKey("BankAccountId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("BankAccountNumber");
                 });
 
             modelBuilder.Entity("BankingApi.Models.Entities.Transfer", b =>
                 {
                     b.HasOne("BankingApi.Models.Entities.Transaction", "DestinationTransaction")
-                        .WithMany()
-                        .HasForeignKey("DestinationTransactionid")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .WithOne()
+                        .HasForeignKey("BankingApi.Models.Entities.Transfer", "DestinationTransactionId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("BankingApi.Models.Entities.Transaction", "SourceTransaction")
-                        .WithMany()
-                        .HasForeignKey("SourceTransactionId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .WithOne()
+                        .HasForeignKey("BankingApi.Models.Entities.Transfer", "SourceTransactionId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 #pragma warning restore 612, 618

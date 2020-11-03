@@ -8,6 +8,19 @@ namespace BankingApi.Data.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "BankAccountNumbers",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(nullable: false),
+                    LastNumber = table.Column<int>(nullable: false),
+                    GeneratedAt = table.Column<DateTime>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BankAccountNumbers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Institutions",
                 columns: table => new
                 {
@@ -52,7 +65,8 @@ namespace BankingApi.Data.Migrations
                 name: "BankAccounts",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(nullable: false),
+                    Number = table.Column<string>(nullable: false),
+                    RoutingNumber = table.Column<string>(nullable: true),
                     CustomerId = table.Column<Guid>(nullable: false),
                     Type = table.Column<int>(nullable: false),
                     DisplayName = table.Column<string>(nullable: true),
@@ -62,7 +76,7 @@ namespace BankingApi.Data.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_BankAccounts", x => x.Id);
+                    table.PrimaryKey("PK_BankAccounts", x => x.Number);
                     table.ForeignKey(
                         name: "FK_BankAccounts_Customers_CustomerId",
                         column: x => x.CustomerId,
@@ -76,7 +90,7 @@ namespace BankingApi.Data.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(nullable: false),
-                    BankAccountId = table.Column<Guid>(nullable: false),
+                    BankAccountNumber = table.Column<string>(nullable: true),
                     Type = table.Column<int>(nullable: false),
                     Amount = table.Column<decimal>(nullable: false),
                     CreatedAt = table.Column<DateTime>(nullable: false)
@@ -85,11 +99,11 @@ namespace BankingApi.Data.Migrations
                 {
                     table.PrimaryKey("PK_Transactions", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Transactions_BankAccounts_BankAccountId",
-                        column: x => x.BankAccountId,
+                        name: "FK_Transactions_BankAccounts_BankAccountNumber",
+                        column: x => x.BankAccountNumber,
                         principalTable: "BankAccounts",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Number",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -98,7 +112,7 @@ namespace BankingApi.Data.Migrations
                 {
                     Id = table.Column<Guid>(nullable: false),
                     SourceTransactionId = table.Column<Guid>(nullable: false),
-                    DestinationTransactionid = table.Column<Guid>(nullable: false),
+                    DestinationTransactionId = table.Column<Guid>(nullable: false),
                     Amount = table.Column<decimal>(nullable: false),
                     CreatedAt = table.Column<DateTime>(nullable: false)
                 },
@@ -106,18 +120,23 @@ namespace BankingApi.Data.Migrations
                 {
                     table.PrimaryKey("PK_Transfers", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Transfers_Transactions_DestinationTransactionid",
-                        column: x => x.DestinationTransactionid,
+                        name: "FK_Transfers_Transactions_DestinationTransactionId",
+                        column: x => x.DestinationTransactionId,
                         principalTable: "Transactions",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Transfers_Transactions_SourceTransactionId",
                         column: x => x.SourceTransactionId,
                         principalTable: "Transactions",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
+
+            migrationBuilder.InsertData(
+                table: "BankAccountNumbers",
+                columns: new[] { "Id", "GeneratedAt", "LastNumber" },
+                values: new object[] { new Guid("fe625a2b-20e3-48d1-9c71-036fd295147b"), new DateTime(2020, 11, 3, 0, 21, 4, 393, DateTimeKind.Utc).AddTicks(2168), 1 });
 
             migrationBuilder.CreateIndex(
                 name: "IX_BankAccounts_CustomerId",
@@ -130,23 +149,28 @@ namespace BankingApi.Data.Migrations
                 column: "InstitutionId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Transactions_BankAccountId",
+                name: "IX_Transactions_BankAccountNumber",
                 table: "Transactions",
-                column: "BankAccountId");
+                column: "BankAccountNumber");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Transfers_DestinationTransactionid",
+                name: "IX_Transfers_DestinationTransactionId",
                 table: "Transfers",
-                column: "DestinationTransactionid");
+                column: "DestinationTransactionId",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Transfers_SourceTransactionId",
                 table: "Transfers",
-                column: "SourceTransactionId");
+                column: "SourceTransactionId",
+                unique: true);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "BankAccountNumbers");
+
             migrationBuilder.DropTable(
                 name: "Transfers");
 

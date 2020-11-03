@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace BankingApi.Data.Services
 {
-    public class InstitutionService
+    public class InstitutionService : IInstitutionService
     {
         private readonly BankingContext _ctx;
         private readonly IMapper _mapper;

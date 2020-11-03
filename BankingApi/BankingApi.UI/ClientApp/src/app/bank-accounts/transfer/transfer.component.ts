@@ -8,8 +8,8 @@ import { BankAccountsService, BankAccount, BankAccountDetails } from '../bank-ac
   styleUrls: ['./transfer.component.css']
 })
 export class BankAccountTransferComponent implements OnInit {
-  private sourceBankAccountId: string;
-  private destinationBankAccountId: string;
+  private sourceAccountNumber: string;
+  private destinationAccountNumber: string;
   private transferAmount: number;
   private bankAccount: BankAccount;
   private bankAccounts: any[];
@@ -17,26 +17,22 @@ export class BankAccountTransferComponent implements OnInit {
   submitted = false;
 
   constructor(private bankAccountsService: BankAccountsService, private route: ActivatedRoute) {
-    this.clearTransfer();
   }
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
-      this.sourceBankAccountId = params.get('id');
+      this.sourceAccountNumber = params.get('number');
 
-      console.log('sourceBankAccountId: ' + this.sourceBankAccountId);
+      console.log('sourceAccountNumber: ' + this.sourceAccountNumber);
 
-      this.bankAccountsService.get(this.sourceBankAccountId)
+      this.bankAccountsService.get(this.sourceAccountNumber)
         .subscribe(response => {
           console.log(response);
           this.bankAccount = response;
-
           this.bankAccountsService.getList(this.bankAccount.customerId)
             .subscribe(response => {
-              console.log('Unfiltered accounts', response);
               // Remove source bank account from list to choose from
-              this.bankAccounts = response.filter(ba => ba.id !== this.sourceBankAccountId);
-              console.log('Filtered accounts: ', this.bankAccounts);
+              this.bankAccounts = response.filter(ba => ba.number !== this.sourceAccountNumber);
             });
         },
         error => {
@@ -46,26 +42,25 @@ export class BankAccountTransferComponent implements OnInit {
   }
 
   performTransfer(): void {
-    this.bankAccountsService.transfer(this.sourceBankAccountId, this.destinationBankAccountId, this.transferAmount)
+    this.bankAccountsService.transfer(this.sourceAccountNumber, this.destinationAccountNumber, this.transferAmount)
       .subscribe(response => {
         console.log(response);
         this.transferSummary = {
           id: response.data.transferId,
           amount: response.data.amount,
-          postedBalance: response.data.postedBalance,
+          sourceAccountNumber: response.data.sourceAccountNumber,
+          sourceAccountBalance: response.data.sourceAccountBalance,
+          destinationAccountNumber: response.data.destinationAccountNumber,
+          destinationAccountBalance: response.data.destinationAccountBalance,
           createdAt: response.data.transferDate
         };
-        console.log(this.transferSummary);
+        this.bankAccount.postedBalance = response.sourceAccountBalance;
+        console.log('Transfer Summary', this.transferSummary);
+        console.log('Bank Account', this.bankAccount);
         this.submitted = true;
       },
       error => {
         console.log(error);
       });
-  }
-
-  clearTransfer(): void {
-    this.submitted = false;
-    this.transferAmount = null;
-    this.destinationBankAccountId = null;
   }
 }

@@ -11,22 +11,26 @@
 <table class='table table-striped' aria-labelledby="tableLabel" *ngIf="bankAccounts">
   <thead>
     <tr>
+      <th>Account Number</th>
+      <th>Routing Number</th>
       <th>Display Name</th>
       <th>Type</th>
       <th>Customer</th>
-      <th>Institution</th>
+      <th>Balance</th>
       <th>Created</th>
       <th>&nbsp;</th>
     </tr>
   </thead>
   <tbody>
     <tr *ngFor="let bankAccount of bankAccounts">
-      <td><strong>{{ bankAccount.displayName }}</strong></td>
+      <td>{{ bankAccount.number }}</td>
+      <td>{{ bankAccount.routingNumber }}</td>
+      <td>{{ bankAccount.displayName }}</td>
       <td>{{ bankAccount.description }}</td>
       <td>{{ bankAccount.customerName }}</td>
-      <td>{{ bankAccount.institutionName }}</td>
+      <td>{{ bankAccount.postedBalance | currency }}</td>
       <td>{{ bankAccount.createdAt | date }}</td>
-      <td><a class="btn btn-secondary" [routerLink]="['/bankaccounts/transfer-from', bankAccount.id]">Make Transfer</a></td>
+      <td><a class="btn btn-secondary" [routerLink]="['/bankaccounts/transfer-from', bankAccount.number]">Make Transfer</a></td>
     </tr>
   </tbody>
 </table>
